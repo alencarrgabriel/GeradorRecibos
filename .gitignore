@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.spec
+
+/.vscode/
+/.idea/
+
+/recibos_app/data/
+/recibos_app/build/
+/recibos_app/dist/
+
+/.venv/
+/venv/
+/.env/
