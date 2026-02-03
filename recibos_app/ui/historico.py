@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QMessageBox,
     QHeaderView,
+    QGroupBox,
 )
 
 from models.recibo import list_recibos, cancel_recibo, delete_recibo
@@ -41,7 +42,11 @@ class HistoricoWidget(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
-        btns = QHBoxLayout()
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
+        actions_group = QGroupBox("Ações")
+        actions_layout = QHBoxLayout(actions_group)
+        btns = actions_layout
         self.btn_refresh = QPushButton("Atualizar")
         self.btn_reprint = QPushButton("Reimprimir")
         self.btn_cancel = QPushButton("Cancelar Recibo")
@@ -50,8 +55,10 @@ class HistoricoWidget(QWidget):
         btns.addWidget(self.btn_reprint)
         btns.addWidget(self.btn_cancel)
         btns.addWidget(self.btn_delete)
-        layout.addLayout(btns)
+        layout.addWidget(actions_group)
 
+        table_group = QGroupBox("Histórico de Recibos")
+        table_layout = QVBoxLayout(table_group)
         self.table = QTableWidget(0, 6)
         self.table.setHorizontalHeaderLabels(
             [
@@ -65,7 +72,8 @@ class HistoricoWidget(QWidget):
         )
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setAlternatingRowColors(True)
-        layout.addWidget(self.table)
+        table_layout.addWidget(self.table)
+        layout.addWidget(table_group)
 
         self.btn_refresh.clicked.connect(self._load_data)
         self.btn_reprint.clicked.connect(self._handle_reprint)

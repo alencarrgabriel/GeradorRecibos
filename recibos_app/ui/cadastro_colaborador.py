@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QDoubleSpinBox,
     QHeaderView,
+    QGroupBox,
+    QFormLayout,
 )
 
 from models.colaborador import (
@@ -31,10 +33,13 @@ class CadastroColaboradorWidget(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
 
-        form_layout = QHBoxLayout()
-        left = QVBoxLayout()
-        right = QVBoxLayout()
+        form_group = QGroupBox("Dados do Colaborador")
+        form_layout = QHBoxLayout(form_group)
+        left = QFormLayout()
+        right = QFormLayout()
 
         self.nome_input = QLineEdit()
         self.cpf_input = QLineEdit()
@@ -47,21 +52,16 @@ class CadastroColaboradorWidget(QWidget):
             spin.setMaximum(1_000_000)
             spin.setDecimals(2)
 
-        left.addWidget(QLabel("Nome *"))
-        left.addWidget(self.nome_input)
-        left.addWidget(QLabel("CPF *"))
-        left.addWidget(self.cpf_input)
+        left.addRow(QLabel("Nome *"), self.nome_input)
+        left.addRow(QLabel("CPF *"), self.cpf_input)
 
-        right.addWidget(QLabel("Valor Passagem"))
-        right.addWidget(self.passagem_input)
-        right.addWidget(QLabel("Valor Diária"))
-        right.addWidget(self.diaria_input)
-        right.addWidget(QLabel("Valor Dobra"))
-        right.addWidget(self.dobra_input)
+        right.addRow(QLabel("Valor Passagem"), self.passagem_input)
+        right.addRow(QLabel("Valor Diária"), self.diaria_input)
+        right.addRow(QLabel("Valor Dobra"), self.dobra_input)
 
         form_layout.addLayout(left, 2)
         form_layout.addLayout(right, 2)
-        layout.addLayout(form_layout)
+        layout.addWidget(form_group)
 
         btns = QHBoxLayout()
         self.btn_add = QPushButton("Cadastrar")
@@ -74,13 +74,16 @@ class CadastroColaboradorWidget(QWidget):
         btns.addWidget(self.btn_clear)
         layout.addLayout(btns)
 
+        table_group = QGroupBox("Colaboradores Cadastrados")
+        table_layout = QVBoxLayout(table_group)
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(
             ["Nome", "CPF", "Passagem", "Diária", "Dobra"]
         )
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setAlternatingRowColors(True)
-        layout.addWidget(self.table)
+        table_layout.addWidget(self.table)
+        layout.addWidget(table_group)
 
         self.btn_add.clicked.connect(self._handle_add)
         self.btn_update.clicked.connect(self._handle_update)

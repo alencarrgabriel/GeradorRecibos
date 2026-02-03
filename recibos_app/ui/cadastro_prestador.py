@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QComboBox,
     QHeaderView,
+    QGroupBox,
+    QFormLayout,
 )
 
 from models.prestador import (
@@ -31,10 +33,13 @@ class CadastroPrestadorWidget(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
 
-        form_layout = QHBoxLayout()
-        left = QVBoxLayout()
-        right = QVBoxLayout()
+        form_group = QGroupBox("Dados do Prestador")
+        form_layout = QHBoxLayout(form_group)
+        left = QFormLayout()
+        right = QFormLayout()
 
         self.nome_input = QLineEdit()
         self.cpf_cnpj_input = QLineEdit()
@@ -43,17 +48,14 @@ class CadastroPrestadorWidget(QWidget):
         self.tipo_input.currentIndexChanged.connect(self._update_mask)
         self._update_mask()
 
-        left.addWidget(QLabel("Nome *"))
-        left.addWidget(self.nome_input)
-        left.addWidget(QLabel("CPF/CNPJ *"))
-        left.addWidget(self.cpf_cnpj_input)
+        left.addRow(QLabel("Nome *"), self.nome_input)
+        left.addRow(QLabel("CPF/CNPJ *"), self.cpf_cnpj_input)
 
-        right.addWidget(QLabel("Tipo"))
-        right.addWidget(self.tipo_input)
+        right.addRow(QLabel("Tipo"), self.tipo_input)
 
         form_layout.addLayout(left, 2)
         form_layout.addLayout(right, 1)
-        layout.addLayout(form_layout)
+        layout.addWidget(form_group)
 
         btns = QHBoxLayout()
         self.btn_add = QPushButton("Cadastrar")
@@ -66,11 +68,14 @@ class CadastroPrestadorWidget(QWidget):
         btns.addWidget(self.btn_clear)
         layout.addLayout(btns)
 
+        table_group = QGroupBox("Prestadores Cadastrados")
+        table_layout = QVBoxLayout(table_group)
         self.table = QTableWidget(0, 3)
         self.table.setHorizontalHeaderLabels(["Nome", "CPF/CNPJ", "Tipo"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setAlternatingRowColors(True)
-        layout.addWidget(self.table)
+        table_layout.addWidget(self.table)
+        layout.addWidget(table_group)
 
         self.btn_add.clicked.connect(self._handle_add)
         self.btn_update.clicked.connect(self._handle_update)

@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
     QDialog,
     QCheckBox,
     QSizePolicy,
+    QGroupBox,
+    QFormLayout,
 )
 
 from models.empresa import list_empresas
@@ -92,6 +94,8 @@ class GerarReciboWidget(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
         self.tabs = QTabWidget()
         layout.addWidget(self.tabs)
 
@@ -109,10 +113,13 @@ class GerarReciboWidget(QWidget):
 
     def _build_tab_passagem(self):
         layout = QVBoxLayout(self.tab_passagem)
-        form = QHBoxLayout()
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+        form_group = QGroupBox("Dados do Recibo")
+        form = QHBoxLayout(form_group)
 
-        left = QVBoxLayout()
-        right = QVBoxLayout()
+        left = QFormLayout()
+        right = QFormLayout()
 
         self.pass_empresa = QComboBox()
         self.pass_colaborador = QComboBox()
@@ -121,25 +128,24 @@ class GerarReciboWidget(QWidget):
         self.pass_inicio.setCalendarPopup(True)
         self.pass_fim.setCalendarPopup(True)
 
-        left.addWidget(QLabel("Empresa"))
-        left.addWidget(self.pass_empresa)
-        left.addWidget(QLabel("Colaborador"))
-        left.addWidget(self.pass_colaborador)
+        left.addRow(QLabel("Empresa"), self.pass_empresa)
+        left.addRow(QLabel("Colaborador"), self.pass_colaborador)
 
-        right.addWidget(QLabel("Data inicial"))
-        right.addWidget(self.pass_inicio)
-        right.addWidget(QLabel("Data final"))
-        right.addWidget(self.pass_fim)
+        right.addRow(QLabel("Data inicial"), self.pass_inicio)
+        right.addRow(QLabel("Data final"), self.pass_fim)
 
         form.addLayout(left, 2)
         form.addLayout(right, 1)
-        layout.addLayout(form)
+        layout.addWidget(form_group)
 
+        total_group = QGroupBox("Resumo")
+        total_layout = QVBoxLayout(total_group)
         self.pass_total = QLineEdit()
         self.pass_total.setReadOnly(True)
         self.pass_total.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        layout.addWidget(QLabel("Valor Total (calculado)"))
-        layout.addWidget(self.pass_total)
+        total_layout.addWidget(QLabel("Valor Total (calculado)"))
+        total_layout.addWidget(self.pass_total)
+        layout.addWidget(total_group)
 
         btn = QPushButton("Pré-visualizar e Gerar")
         layout.addWidget(btn)
@@ -151,10 +157,13 @@ class GerarReciboWidget(QWidget):
 
     def _build_tab_diaria(self):
         layout = QVBoxLayout(self.tab_diaria)
-        form = QHBoxLayout()
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+        form_group = QGroupBox("Dados do Recibo")
+        form = QHBoxLayout(form_group)
 
-        left = QVBoxLayout()
-        right = QVBoxLayout()
+        left = QFormLayout()
+        right = QFormLayout()
 
         self.diaria_empresa = QComboBox()
         self.diaria_colaborador = QComboBox()
@@ -165,27 +174,25 @@ class GerarReciboWidget(QWidget):
         self.diaria_inicio.setCalendarPopup(True)
         self.diaria_fim.setCalendarPopup(True)
 
-        left.addWidget(QLabel("Empresa"))
-        left.addWidget(self.diaria_empresa)
-        left.addWidget(QLabel("Colaborador"))
-        left.addWidget(self.diaria_colaborador)
-        left.addWidget(QLabel("Tipo"))
-        left.addWidget(self.diaria_tipo)
+        left.addRow(QLabel("Empresa"), self.diaria_empresa)
+        left.addRow(QLabel("Colaborador"), self.diaria_colaborador)
+        left.addRow(QLabel("Tipo"), self.diaria_tipo)
 
-        right.addWidget(QLabel("Data inicial"))
-        right.addWidget(self.diaria_inicio)
-        right.addWidget(QLabel("Data final"))
-        right.addWidget(self.diaria_fim)
+        right.addRow(QLabel("Data inicial"), self.diaria_inicio)
+        right.addRow(QLabel("Data final"), self.diaria_fim)
 
         form.addLayout(left, 2)
         form.addLayout(right, 1)
-        layout.addLayout(form)
+        layout.addWidget(form_group)
 
+        total_group = QGroupBox("Resumo")
+        total_layout = QVBoxLayout(total_group)
         self.diaria_total = QLineEdit()
         self.diaria_total.setReadOnly(True)
         self.diaria_total.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        layout.addWidget(QLabel("Valor Total (calculado)"))
-        layout.addWidget(self.diaria_total)
+        total_layout.addWidget(QLabel("Valor Total (calculado)"))
+        total_layout.addWidget(self.diaria_total)
+        layout.addWidget(total_group)
 
         btn = QPushButton("Pré-visualizar e Gerar")
         layout.addWidget(btn)
@@ -198,10 +205,13 @@ class GerarReciboWidget(QWidget):
 
     def _build_tab_prestador(self):
         layout = QVBoxLayout(self.tab_prestador)
-        form = QHBoxLayout()
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+        form_group = QGroupBox("Dados do Recibo")
+        form = QHBoxLayout(form_group)
 
-        left = QVBoxLayout()
-        right = QVBoxLayout()
+        left = QFormLayout()
+        right = QFormLayout()
 
         self.pres_empresa = QComboBox()
         self.pres_prestador = QComboBox()
@@ -211,26 +221,22 @@ class GerarReciboWidget(QWidget):
         self.pres_data = QDateEdit(QDate.currentDate())
         self.pres_data.setCalendarPopup(True)
 
-        left.addWidget(QLabel("Empresa"))
-        left.addWidget(self.pres_empresa)
-        left.addWidget(QLabel("Prestador"))
-        left.addWidget(self.pres_prestador)
-        left.addWidget(QLabel("Valor"))
-        left.addWidget(self.pres_valor)
+        left.addRow(QLabel("Empresa"), self.pres_empresa)
+        left.addRow(QLabel("Prestador"), self.pres_prestador)
+        left.addRow(QLabel("Valor"), self.pres_valor)
 
-        right.addWidget(QLabel("Data do pagamento"))
-        right.addWidget(self.pres_data)
-        right.addWidget(QLabel("Descrição do serviço"))
+        right.addRow(QLabel("Data do pagamento"), self.pres_data)
+        right.addRow(QLabel("Descrição do serviço"), QLabel(""))
         self.pres_desc = QTextEdit()
         self.pres_desc.setFixedHeight(120)
-        right.addWidget(self.pres_desc)
+        right.addRow(self.pres_desc)
 
         self.pres_usar_padrao = QCheckBox("Usar texto padrão da empresa")
-        right.addWidget(self.pres_usar_padrao)
+        right.addRow(self.pres_usar_padrao)
 
         form.addLayout(left, 2)
         form.addLayout(right, 3)
-        layout.addLayout(form)
+        layout.addWidget(form_group)
 
         btn = QPushButton("Pré-visualizar e Gerar")
         layout.addWidget(btn)

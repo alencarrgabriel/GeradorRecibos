@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QMainWindow, QTabWidget, QToolBar, QPushButton
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QPalette, QColor
+from PySide6.QtWidgets import QApplication
 
 from ui.cadastro_empresa import CadastroEmpresaWidget
 from ui.cadastro_colaborador import CadastroColaboradorWidget
@@ -52,6 +53,7 @@ class MainWindow(QMainWindow):
 
     def _apply_theme(self):
         self.setFont(QFont("Segoe UI", 10))
+        self._apply_palette()
         if not self.is_dark:
             self.setStyleSheet(
                 """
@@ -120,6 +122,17 @@ class MainWindow(QMainWindow):
                 }
                 QTabBar::tab:selected { background: #151821; }
                 QLabel { color: #e6e9ef; }
+                QGroupBox {
+                    border: 1px solid #2a2f3a;
+                    border-radius: 6px;
+                    margin-top: 10px;
+                    color: #e6e9ef;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 10px;
+                    padding: 0 4px;
+                }
                 QLineEdit, QTextEdit, QComboBox, QDateEdit, QDoubleSpinBox {
                     background: #1a1d24;
                     border: 1px solid #2a2f3a;
@@ -127,6 +140,14 @@ class MainWindow(QMainWindow):
                     padding: 6px 8px;
                     color: #e6e9ef;
                 }
+                QCheckBox { color: #e6e9ef; }
+                QListWidget {
+                    background: #1a1d24;
+                    border: 1px solid #2a2f3a;
+                    color: #e6e9ef;
+                    alternate-background-color: #1b1f29;
+                }
+                QListWidget::item:selected { background: #243048; }
                 QLineEdit:focus, QTextEdit:focus, QComboBox:focus, QDateEdit:focus, QDoubleSpinBox:focus {
                     border: 1px solid #6aa2ff;
                 }
@@ -146,7 +167,9 @@ class MainWindow(QMainWindow):
                     selection-background-color: #243048;
                     selection-color: #e6e9ef;
                     color: #e6e9ef;
+                    alternate-background-color: #1b1f29;
                 }
+                QTableWidget::item:selected { background: #243048; color: #e6e9ef; }
                 QHeaderView::section {
                     background: #1a1d24;
                     padding: 6px 8px;
@@ -156,6 +179,40 @@ class MainWindow(QMainWindow):
                 }
                 """
             )
+
+    def _apply_palette(self):
+        app = QApplication.instance()
+        if not app:
+            return
+        if self.is_dark:
+            palette = QPalette()
+            palette.setColor(QPalette.Window, QColor("#111318"))
+            palette.setColor(QPalette.WindowText, QColor("#e6e9ef"))
+            palette.setColor(QPalette.Base, QColor("#1a1d24"))
+            palette.setColor(QPalette.AlternateBase, QColor("#1b1f29"))
+            palette.setColor(QPalette.ToolTipBase, QColor("#1a1d24"))
+            palette.setColor(QPalette.ToolTipText, QColor("#e6e9ef"))
+            palette.setColor(QPalette.Text, QColor("#e6e9ef"))
+            palette.setColor(QPalette.Button, QColor("#1a1d24"))
+            palette.setColor(QPalette.ButtonText, QColor("#e6e9ef"))
+            palette.setColor(QPalette.BrightText, QColor("#ffffff"))
+            palette.setColor(QPalette.Highlight, QColor("#243048"))
+            palette.setColor(QPalette.HighlightedText, QColor("#e6e9ef"))
+        else:
+            palette = QPalette()
+            palette.setColor(QPalette.Window, QColor("#f6f7fb"))
+            palette.setColor(QPalette.WindowText, QColor("#2d2f36"))
+            palette.setColor(QPalette.Base, QColor("#ffffff"))
+            palette.setColor(QPalette.AlternateBase, QColor("#f0f3f9"))
+            palette.setColor(QPalette.ToolTipBase, QColor("#ffffff"))
+            palette.setColor(QPalette.ToolTipText, QColor("#2d2f36"))
+            palette.setColor(QPalette.Text, QColor("#1f2430"))
+            palette.setColor(QPalette.Button, QColor("#ffffff"))
+            palette.setColor(QPalette.ButtonText, QColor("#1f2430"))
+            palette.setColor(QPalette.BrightText, QColor("#ffffff"))
+            palette.setColor(QPalette.Highlight, QColor("#e6efff"))
+            palette.setColor(QPalette.HighlightedText, QColor("#1b2b4a"))
+        app.setPalette(palette)
 
     def _toggle_theme(self):
         self.is_dark = not self.is_dark

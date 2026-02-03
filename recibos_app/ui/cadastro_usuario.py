@@ -10,6 +10,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QCheckBox,
     QHeaderView,
+    QGroupBox,
+    QFormLayout,
 )
 
 from models.usuario import list_usuarios, create_usuario
@@ -23,27 +25,27 @@ class CadastroUsuarioWidget(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
 
-        form = QHBoxLayout()
-        left = QVBoxLayout()
-        right = QVBoxLayout()
+        form_group = QGroupBox("Dados do Usuário")
+        form = QHBoxLayout(form_group)
+        left = QFormLayout()
+        right = QFormLayout()
 
         self.username_input = QLineEdit()
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.Password)
         self.is_admin_input = QCheckBox("Administrador")
 
-        left.addWidget(QLabel("Usuário *"))
-        left.addWidget(self.username_input)
-        left.addWidget(QLabel("Senha *"))
-        left.addWidget(self.password_input)
+        left.addRow(QLabel("Usuário *"), self.username_input)
+        left.addRow(QLabel("Senha *"), self.password_input)
 
-        right.addWidget(QLabel("Permissão"))
-        right.addWidget(self.is_admin_input)
+        right.addRow(QLabel("Permissão"), self.is_admin_input)
 
         form.addLayout(left, 2)
         form.addLayout(right, 1)
-        layout.addLayout(form)
+        layout.addWidget(form_group)
 
         btns = QHBoxLayout()
         self.btn_add = QPushButton("Cadastrar")
@@ -52,11 +54,14 @@ class CadastroUsuarioWidget(QWidget):
         btns.addWidget(self.btn_clear)
         layout.addLayout(btns)
 
+        table_group = QGroupBox("Usuários Cadastrados")
+        table_layout = QVBoxLayout(table_group)
         self.table = QTableWidget(0, 3)
         self.table.setHorizontalHeaderLabels(["Usuário", "Admin", "Ativo"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setAlternatingRowColors(True)
-        layout.addWidget(self.table)
+        table_layout.addWidget(self.table)
+        layout.addWidget(table_group)
 
         self.btn_add.clicked.connect(self._handle_add)
         self.btn_clear.clicked.connect(self._handle_delete)

@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QMessageBox,
     QHeaderView,
+    QGroupBox,
+    QFormLayout,
 )
 
 from models.empresa import (
@@ -31,10 +33,13 @@ class CadastroEmpresaWidget(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
 
-        form_layout = QHBoxLayout()
-        left = QVBoxLayout()
-        right = QVBoxLayout()
+        form_group = QGroupBox("Dados da Empresa")
+        form_layout = QHBoxLayout(form_group)
+        left = QFormLayout()
+        right = QFormLayout()
 
         self.razao_input = QLineEdit()
         self.nome_fantasia_input = QLineEdit()
@@ -43,19 +48,15 @@ class CadastroEmpresaWidget(QWidget):
         self.texto_padrao_input = QTextEdit()
         self.texto_padrao_input.setFixedHeight(80)
 
-        left.addWidget(QLabel("Razão Social *"))
-        left.addWidget(self.razao_input)
-        left.addWidget(QLabel("Nome Fantasia"))
-        left.addWidget(self.nome_fantasia_input)
-        left.addWidget(QLabel("CNPJ *"))
-        left.addWidget(self.cnpj_input)
+        left.addRow(QLabel("Razão Social *"), self.razao_input)
+        left.addRow(QLabel("Nome Fantasia"), self.nome_fantasia_input)
+        left.addRow(QLabel("CNPJ *"), self.cnpj_input)
 
-        right.addWidget(QLabel("Texto Padrão do Recibo"))
-        right.addWidget(self.texto_padrao_input)
+        right.addRow(QLabel("Texto Padrão do Recibo"), self.texto_padrao_input)
 
         form_layout.addLayout(left, 2)
         form_layout.addLayout(right, 3)
-        layout.addLayout(form_layout)
+        layout.addWidget(form_group)
 
         btns = QHBoxLayout()
         self.btn_add = QPushButton("Cadastrar")
@@ -68,13 +69,16 @@ class CadastroEmpresaWidget(QWidget):
         btns.addWidget(self.btn_clear)
         layout.addLayout(btns)
 
+        table_group = QGroupBox("Empresas Cadastradas")
+        table_layout = QVBoxLayout(table_group)
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(
             ["Razão Social", "Nome Fantasia", "CNPJ", "Ativa"]
         )
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setAlternatingRowColors(True)
-        layout.addWidget(self.table)
+        table_layout.addWidget(self.table)
+        layout.addWidget(table_group)
 
         self.btn_add.clicked.connect(self._handle_add)
         self.btn_update.clicked.connect(self._handle_update)

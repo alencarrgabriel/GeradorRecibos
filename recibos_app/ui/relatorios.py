@@ -35,8 +35,11 @@ class RelatoriosWidget(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
 
         filtros = QHBoxLayout()
+        filtros.setSpacing(10)
 
         box_empresa = QGroupBox("Empresas")
         box_empresa_layout = QVBoxLayout(box_empresa)
@@ -89,6 +92,8 @@ class RelatoriosWidget(QWidget):
         btns.addWidget(self.btn_pdf)
         layout.addLayout(btns)
 
+        table_group = QGroupBox("Resultados")
+        table_layout = QVBoxLayout(table_group)
         self.table = QTableWidget(0, 8)
         self.table.setHorizontalHeaderLabels(
             [
@@ -104,7 +109,8 @@ class RelatoriosWidget(QWidget):
         )
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setAlternatingRowColors(True)
-        layout.addWidget(self.table)
+        table_layout.addWidget(self.table)
+        layout.addWidget(table_group)
 
         self.total_label = QLabel("Total: R$ 0,00")
         layout.addWidget(self.total_label)

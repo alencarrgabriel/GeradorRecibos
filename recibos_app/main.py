@@ -12,6 +12,7 @@ def main():
     init_db()
     ensure_admin()
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
     login = LoginDialog()
     if login.exec() != LoginDialog.Accepted:
         return
