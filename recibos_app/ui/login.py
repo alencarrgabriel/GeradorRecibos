@@ -1,4 +1,6 @@
 from PySide6.QtCore import Qt
+import os
+
 from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
     QDialog,
@@ -14,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from models.usuario import authenticate
+from app_paths import get_resource_path
 
 
 class LoginDialog(QDialog):
@@ -68,7 +71,11 @@ class LoginDialog(QDialog):
         subtitle.setStyleSheet("color: #5a6375;")
 
         logo = QLabel()
-        pixmap = QPixmap("assets/LOGO - MERCADO.png")
+        logo_path = get_resource_path("assets", "LOGO - MERCADO.png")
+        pixmap = QPixmap(logo_path)
+        if pixmap.isNull():
+            fallback = os.path.join(os.path.dirname(__file__), "..", "assets", "LOGO - MERCADO.png")
+            pixmap = QPixmap(os.path.abspath(fallback))
         if not pixmap.isNull():
             logo.setPixmap(pixmap.scaled(220, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation))
             logo.setAlignment(Qt.AlignCenter)

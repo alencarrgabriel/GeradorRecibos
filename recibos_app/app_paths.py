@@ -13,3 +13,11 @@ def get_data_dir() -> str:
     data_dir = os.path.join(base_dir, "data")
     os.makedirs(data_dir, exist_ok=True)
     return data_dir
+
+
+def get_resource_path(*parts: str) -> str:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        base_dir = getattr(sys, "_MEIPASS")
+    else:
+        base_dir = get_app_base_dir()
+    return os.path.join(base_dir, *parts)

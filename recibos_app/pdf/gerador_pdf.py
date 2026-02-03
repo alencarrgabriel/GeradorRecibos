@@ -5,6 +5,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
+from app_paths import get_resource_path
 
 UNIDADES = [
     "zero",
@@ -139,6 +140,7 @@ def gerar_pdf_recibo(
 
     c = canvas.Canvas(caminho_pdf, pagesize=A4)
     largura, altura = A4
+    _draw_watermark(c, largura, altura)
 
     if template in ("PASSAGEM", "COMPACTO"):
         y = altura - 24 * mm
@@ -244,6 +246,29 @@ def gerar_pdf_recibo(
 
     c.showPage()
     c.save()
+
+
+def _draw_watermark(c, largura, altura):
+    logo_path = get_resource_path("assets", "LOGO - MERCADO.png")
+    if not os.path.exists(logo_path):
+        return
+    try:
+        if hasattr(c, "setFillAlpha"):
+            c.saveState()
+            c.setFillAlpha(0.12)
+        else:
+            c.saveState()
+        logo_w = 110 * mm
+        logo_h = 55 * mm
+        x = (largura - logo_w) / 2
+        y = (altura - logo_h) / 2 + 80 * mm
+        c.drawImage(logo_path, x, y, width=logo_w, height=logo_h, mask="auto")
+        c.restoreState()
+    except Exception:
+        try:
+            c.restoreState()
+        except Exception:
+            pass
 
 
 def _wrap_text(texto, max_chars):

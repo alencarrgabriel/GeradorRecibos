@@ -2,7 +2,8 @@ import os
 import re
 from datetime import datetime
 
-from PySide6.QtCore import QDate
+from PySide6.QtCore import QDate, Qt
+from PySide6.QtGui import QTextCharFormat, QColor
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -21,6 +22,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QGroupBox,
     QFormLayout,
+    QCalendarWidget,
 )
 
 from models.empresa import list_empresas
@@ -89,6 +91,7 @@ class GerarReciboWidget(QWidget):
         self.empresas = []
         self.colaboradores = []
         self.prestadores = []
+        self.pass_selected_dates = set()
         self._build_ui()
         self._load_data()
 
@@ -138,6 +141,19 @@ class GerarReciboWidget(QWidget):
         form.addLayout(right, 1)
         layout.addWidget(form_group)
 
+        calendario_group = QGroupBox("Dias Trabalhados (clique para marcar/desmarcar)")
+        calendario_layout = QVBoxLayout(calendario_group)
+        self.pass_calendario = QCalendarWidget()
+        self.pass_calendario.setGridVisible(True)
+        calendario_layout.addWidget(self.pass_calendario)
+        cal_btns = QHBoxLayout()
+        self.pass_btn_aplicar = QPushButton("Marcar período")
+        self.pass_btn_limpar = QPushButton("Limpar seleção")
+        cal_btns.addWidget(self.pass_btn_aplicar)
+        cal_btns.addWidget(self.pass_btn_limpar)
+        calendario_layout.addLayout(cal_btns)
+        layout.addWidget(calendario_group)
+
         total_group = QGroupBox("Resumo")
         total_layout = QVBoxLayout(total_group)
         self.pass_total = QLineEdit()
@@ -151,9 +167,12 @@ class GerarReciboWidget(QWidget):
         layout.addWidget(btn)
         btn.clicked.connect(self._handle_passagem)
 
-        self.pass_inicio.dateChanged.connect(self._calc_passagem)
-        self.pass_fim.dateChanged.connect(self._calc_passagem)
+        self.pass_inicio.dateChanged.connect(self._apply_passagem_period)
+        self.pass_fim.dateChanged.connect(self._apply_passagem_period)
         self.pass_colaborador.currentIndexChanged.connect(self._calc_passagem)
+        self.pass_calendario.clicked.connect(self._toggle_passagem_date)
+        self.pass_btn_aplicar.clicked.connect(self._apply_passagem_period)
+        self.pass_btn_limpar.clicked.connect(self._clear_passagem_selection)
 
     def _build_tab_diaria(self):
         layout = QVBoxLayout(self.tab_diaria)
@@ -267,7 +286,7 @@ class GerarReciboWidget(QWidget):
         if not colab:
             self.pass_total.setText("0.00")
             return
-        dias = self._calc_dias(self.pass_inicio.date(), self.pass_fim.date())
+        dias = len(self.pass_selected_dates)
         total = dias * (colab["valor_passagem"] or 0)
         self.pass_total.setText(f"{total:.2f}")
 
@@ -303,9 +322,9 @@ class GerarReciboWidget(QWidget):
             return
         inicio = self.pass_inicio.date()
         fim = self.pass_fim.date()
-        dias = self._calc_dias(inicio, fim)
+        dias = len(self.pass_selected_dates)
         if dias <= 0:
-            QMessageBox.warning(self, "Validação", "Período inválido.")
+            QMessageBox.warning(self, "Validação", "Selecione ao menos um dia trabalhado.")
             return
 
         valor = float(self.pass_total.text())
@@ -354,6 +373,41 @@ class GerarReciboWidget(QWidget):
         )
         self._abrir_pdf(caminho_pdf)
         QMessageBox.information(self, "OK", "Recibo gerado com sucesso.")
+
+    def _apply_passagem_period(self):
+        self.pass_selected_dates = set()
+        inicio = self.pass_inicio.date()
+        fim = self.pass_fim.date()
+        if fim < inicio:
+            self._calc_passagem()
+            return
+        d = inicio
+        while d <= fim:
+            self.pass_selected_dates.add(d)
+            d = d.addDays(1)
+        self._refresh_calendar_selection()
+        self._calc_passagem()
+
+    def _clear_passagem_selection(self):
+        self.pass_selected_dates = set()
+        self._refresh_calendar_selection()
+        self._calc_passagem()
+
+    def _toggle_passagem_date(self, date):
+        if date in self.pass_selected_dates:
+            self.pass_selected_dates.remove(date)
+        else:
+            self.pass_selected_dates.add(date)
+        self._refresh_calendar_selection()
+        self._calc_passagem()
+
+    def _refresh_calendar_selection(self):
+        self.pass_calendario.setDateTextFormat(QDate(), QTextCharFormat())
+        fmt = QTextCharFormat()
+        fmt.setBackground(QColor("#ffd1d1"))
+        fmt.setForeground(QColor("#000000"))
+        for d in self.pass_selected_dates:
+            self.pass_calendario.setDateTextFormat(d, fmt)
 
     def _handle_diaria(self):
         empresa = self._get_selected(self.diaria_empresa, self.empresas)

@@ -14,6 +14,7 @@ python -m PyInstaller `
     --windowed `
     --name $Name `
     --icon "assets\\icon.ico" `
+    --add-data "assets\\LOGO - MERCADO.png;assets" `
     "main.py"
 
 Write-Host "Build finalizado. Verifique a pasta dist/."
