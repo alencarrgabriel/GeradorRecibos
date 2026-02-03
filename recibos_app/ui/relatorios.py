@@ -276,6 +276,10 @@ class RelatoriosWidget(QWidget):
         c.drawString(margem_x, y, f"Total: R$ {formatar_moeda(total)}")
 
         c.save()
+        try:
+            os.startfile(caminho)
+        except Exception:
+            pass
         QMessageBox.information(self, "Relatórios", f"PDF gerado em: {caminho}")
 
 
