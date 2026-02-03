@@ -56,6 +56,10 @@ def formatar_documento(doc):
     return doc
 
 
+def formatar_cnpj(doc):
+    return format_cnpj(doc)
+
+
 class PreviewDialog(QDialog):
     def __init__(self, preview_text):
         super().__init__()
@@ -77,8 +81,9 @@ class PreviewDialog(QDialog):
 
 
 class GerarReciboWidget(QWidget):
-    def __init__(self):
+    def __init__(self, current_user):
         super().__init__()
+        self.current_user = current_user
         self.empresas = []
         self.colaboradores = []
         self.prestadores = []
@@ -330,6 +335,7 @@ class GerarReciboWidget(QWidget):
 
         create_recibo(
             empresa["id"],
+            self.current_user["id"],
             "PASSAGEM",
             colab["nome"],
             formatar_documento(colab["cpf"]),
@@ -398,6 +404,7 @@ class GerarReciboWidget(QWidget):
 
         create_recibo(
             empresa["id"],
+            self.current_user["id"],
             "DIARIA" if tipo == "Diária" else "DOBRA",
             colab["nome"],
             colab["cpf"],
@@ -461,6 +468,7 @@ class GerarReciboWidget(QWidget):
 
         create_recibo(
             empresa["id"],
+            self.current_user["id"],
             "PRESTACAO",
             prestador["nome"],
             prestador["cpf_cnpj"],
@@ -532,7 +540,7 @@ class GerarReciboWidget(QWidget):
         gerar_pdf_recibo(
             caminho_pdf,
             empresa["razao_social"],
-            empresa["cnpj"],
+            formatar_cnpj(empresa["cnpj"]),
             nome,
             documento,
             valor,

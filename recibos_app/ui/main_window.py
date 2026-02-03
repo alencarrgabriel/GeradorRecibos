@@ -6,14 +6,17 @@ from ui.cadastro_colaborador import CadastroColaboradorWidget
 from ui.cadastro_prestador import CadastroPrestadorWidget
 from ui.gerar_recibo import GerarReciboWidget
 from ui.historico import HistoricoWidget
+from ui.relatorios import RelatoriosWidget
+from ui.cadastro_usuario import CadastroUsuarioWidget
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, current_user):
         super().__init__()
         self.setWindowTitle("Gerador de Recibos")
         self.setMinimumSize(900, 600)
         self.is_dark = False
+        self.current_user = current_user
         self._apply_theme()
 
         self.tabs = QTabWidget()
@@ -23,14 +26,19 @@ class MainWindow(QMainWindow):
         self.tab_empresas = CadastroEmpresaWidget()
         self.tab_colaboradores = CadastroColaboradorWidget()
         self.tab_prestadores = CadastroPrestadorWidget()
-        self.tab_gerar = GerarReciboWidget()
-        self.tab_historico = HistoricoWidget()
+        self.tab_gerar = GerarReciboWidget(self.current_user)
+        self.tab_historico = HistoricoWidget(self.current_user)
+        self.tab_relatorios = RelatoriosWidget(self.current_user)
+        self.tab_usuarios = CadastroUsuarioWidget()
 
         self.tabs.addTab(self.tab_empresas, "Empresas")
         self.tabs.addTab(self.tab_colaboradores, "Colaboradores")
         self.tabs.addTab(self.tab_prestadores, "Prestadores")
         self.tabs.addTab(self.tab_gerar, "Gerar Recibo")
         self.tabs.addTab(self.tab_historico, "Histórico")
+        self.tabs.addTab(self.tab_relatorios, "Relatórios")
+        if self.current_user["is_admin"]:
+            self.tabs.addTab(self.tab_usuarios, "Usuários")
 
         self.tabs.currentChanged.connect(self._on_tab_changed)
 
@@ -71,14 +79,14 @@ class MainWindow(QMainWindow):
                     border: 1px solid #5b8cff;
                 }
                 QPushButton {
-                    background: #2f6fed;
+                    background: #ef090a;
                     color: #ffffff;
                     border: none;
                     padding: 8px 12px;
                     border-radius: 6px;
                 }
-                QPushButton:hover { background: #255fd1; }
-                QPushButton:disabled { background: #b7c6ea; }
+                QPushButton:hover { background: #c90808; }
+                QPushButton:disabled { background: #f3a0a0; }
                 QTableWidget {
                     background: #ffffff;
                     border: 1px solid #dcdfe6;
@@ -123,14 +131,14 @@ class MainWindow(QMainWindow):
                     border: 1px solid #6aa2ff;
                 }
                 QPushButton {
-                    background: #3a6ff7;
+                    background: #ef090a;
                     color: #ffffff;
                     border: none;
                     padding: 8px 12px;
                     border-radius: 6px;
                 }
-                QPushButton:hover { background: #2f5fd4; }
-                QPushButton:disabled { background: #3b4a6b; }
+                QPushButton:hover { background: #c90808; }
+                QPushButton:disabled { background: #6b3b3b; }
                 QTableWidget {
                     background: #151821;
                     border: 1px solid #2a2f3a;

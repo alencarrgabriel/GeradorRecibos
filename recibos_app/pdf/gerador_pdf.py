@@ -148,7 +148,7 @@ def gerar_pdf_recibo(
         y -= 10 * mm
         c.setFont("Helvetica-Bold", 11)
         c.drawString(20 * mm, y, empresa_razao.upper())
-        c.setFont("Helvetica", 11)
+        c.setFont("Helvetica-Bold", 11)
         c.drawRightString(largura - 20 * mm, y, f"CNPJ: {empresa_cnpj}")
 
         y -= 10 * mm
@@ -203,9 +203,10 @@ def gerar_pdf_recibo(
         c.drawCentredString(largura / 2, y, "RECIBO DE PAGAMENTO")
 
         y -= 12 * mm
-        c.setFont("Helvetica", 11)
+        c.setFont("Helvetica-Bold", 11)
         c.drawString(20 * mm, y, f"{empresa_razao}")
         y -= 6 * mm
+        c.setFont("Helvetica-Bold", 11)
         c.drawString(20 * mm, y, f"CNPJ: {empresa_cnpj}")
 
         y -= 14 * mm

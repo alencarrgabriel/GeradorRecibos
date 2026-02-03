@@ -61,6 +61,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS recibos (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           empresa_id INTEGER,
+          usuario_id INTEGER,
           tipo TEXT,
           pessoa_nome TEXT,
           pessoa_documento TEXT,
@@ -70,11 +71,35 @@ def init_db():
           data_fim DATE,
           data_pagamento DATE,
           caminho_pdf TEXT,
+          created_at TEXT,
           status TEXT DEFAULT 'ATIVO',
           FOREIGN KEY (empresa_id) REFERENCES empresas(id)
         );
         """
     )
 
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS usuarios (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL UNIQUE,
+          password_hash TEXT NOT NULL,
+          salt TEXT NOT NULL,
+          is_admin INTEGER DEFAULT 0,
+          ativo INTEGER DEFAULT 1
+        );
+        """
+    )
+
+    _ensure_column(cur, "recibos", "usuario_id", "INTEGER")
+    _ensure_column(cur, "recibos", "created_at", "TEXT")
+
     conn.commit()
     conn.close()
+
+
+def _ensure_column(cur, table, column, col_type):
+    cur.execute(f"PRAGMA table_info({table})")
+    cols = [row[1] for row in cur.fetchall()]
+    if column not in cols:
+        cur.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
