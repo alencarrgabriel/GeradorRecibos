@@ -1,17 +1,40 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
+*.egg
+*.whl
+
+# Logs
 *.log
+
+# PyInstaller
 *.spec
-
-/.vscode/
-/.idea/
-
-/recibos_app/data/
 /recibos_app/build/
 /recibos_app/dist/
 
+# Dados locais (banco, PDFs, configs)
+/recibos_app/data/
+
+# IDEs e Editores
+/.vscode/
+/.idea/
+*.swp
+*.swo
+*~
+
+# Ambientes virtuais
 /.venv/
 /venv/
 /.env/
+/env/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Gemini
+/.gemini/

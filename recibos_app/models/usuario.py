@@ -14,7 +14,7 @@ def _hash_password(password, salt=None):
     return base64.b64encode(dk).decode("utf-8"), base64.b64encode(salt).decode("utf-8")
 
 
-def ensure_admin(username="admin", password="85110227"):
+def ensure_admin(username="admin", password="admin"):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT id FROM usuarios WHERE username = ?", (username,))

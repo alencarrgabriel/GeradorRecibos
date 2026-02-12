@@ -15,7 +15,7 @@ def create_recibo(
     data_fim,
     data_pagamento,
     caminho_pdf,
-    status="ATIVO",
+    status="PAGO",
 ):
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     conn = get_connection()
@@ -80,6 +80,7 @@ def list_recibos_filtrados(
     empresa_ids=None,
     usuario_ids=None,
     tipos=None,
+    status_list=None,
     data_inicio=None,
     data_fim=None,
 ):
@@ -97,6 +98,9 @@ def list_recibos_filtrados(
     if tipos:
         where.append(f"r.tipo IN ({','.join(['?']*len(tipos))})")
         params.extend(tipos)
+    if status_list:
+        where.append(f"r.status IN ({','.join(['?']*len(status_list))})")
+        params.extend(status_list)
     if data_inicio:
         where.append("r.data_pagamento >= ?")
         params.append(data_inicio)

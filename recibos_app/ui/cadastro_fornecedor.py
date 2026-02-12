@@ -15,16 +15,16 @@ from PySide6.QtWidgets import (
     QFormLayout,
 )
 
-from data.repositories.sqlite_prestador_repo import (
-    list_prestadores,
-    create_prestador,
-    update_prestador,
-    delete_prestador,
+from data.repositories.sqlite_fornecedor_repo import (
+    list_fornecedores,
+    create_fornecedor,
+    update_fornecedor,
+    delete_fornecedor,
 )
 from ui.validators import only_digits, is_valid_cpf, is_valid_cnpj, format_cpf, format_cnpj
 
 
-class CadastroPrestadorWidget(QWidget):
+class CadastroFornecedorWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.selected_id = None
@@ -36,7 +36,7 @@ class CadastroPrestadorWidget(QWidget):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
 
-        form_group = QGroupBox("Dados do Prestador")
+        form_group = QGroupBox("Dados do Fornecedor")
         form_layout = QHBoxLayout(form_group)
         left = QFormLayout()
         right = QFormLayout()
@@ -68,7 +68,7 @@ class CadastroPrestadorWidget(QWidget):
         btns.addWidget(self.btn_clear)
         layout.addLayout(btns)
 
-        table_group = QGroupBox("Prestadores Cadastrados")
+        table_group = QGroupBox("Fornecedores Cadastrados")
         table_layout = QVBoxLayout(table_group)
         self.table = QTableWidget(0, 3)
         self.table.setHorizontalHeaderLabels(["Nome", "CPF/CNPJ", "Tipo"])
@@ -85,7 +85,7 @@ class CadastroPrestadorWidget(QWidget):
 
     def _load_data(self):
         self.table.setRowCount(0)
-        for row in list_prestadores(ativos_apenas=False):
+        for row in list_fornecedores(ativos_apenas=False):
             row_idx = self.table.rowCount()
             self.table.insertRow(row_idx)
             self.table.setItem(row_idx, 0, QTableWidgetItem(row["nome"]))
@@ -122,13 +122,13 @@ class CadastroPrestadorWidget(QWidget):
             if not is_valid_cnpj(doc):
                 QMessageBox.warning(self, "Validação", "CNPJ inválido.")
                 return
-        create_prestador(nome, only_digits(doc), self.tipo_input.currentText())
+        create_fornecedor(nome, only_digits(doc), self.tipo_input.currentText())
         self._clear_form()
         self._load_data()
 
     def _handle_update(self):
         if not self.selected_id:
-            QMessageBox.information(self, "Seleção", "Selecione um prestador.")
+            QMessageBox.information(self, "Seleção", "Selecione um fornecedor.")
             return
         nome = self.nome_input.text().strip()
         doc = self.cpf_cnpj_input.text().strip()
@@ -143,7 +143,7 @@ class CadastroPrestadorWidget(QWidget):
             if not is_valid_cnpj(doc):
                 QMessageBox.warning(self, "Validação", "CNPJ inválido.")
                 return
-        update_prestador(
+        update_fornecedor(
             self.selected_id, nome, only_digits(doc), self.tipo_input.currentText()
         )
         self._clear_form()
@@ -151,18 +151,18 @@ class CadastroPrestadorWidget(QWidget):
 
     def _handle_delete(self):
         if not self.selected_id:
-            QMessageBox.information(self, "Seleção", "Selecione um prestador.")
+            QMessageBox.information(self, "Seleção", "Selecione um fornecedor.")
             return
         if (
             QMessageBox.question(
                 self,
                 "Confirmar exclusão",
-                "Tem certeza que deseja excluir este prestador?",
+                "Tem certeza que deseja excluir este fornecedor?",
             )
             != QMessageBox.Yes
         ):
             return
-        delete_prestador(self.selected_id)
+        delete_fornecedor(self.selected_id)
         self._clear_form()
         self._load_data()
 

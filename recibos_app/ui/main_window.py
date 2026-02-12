@@ -1,14 +1,21 @@
-from PySide6.QtWidgets import QMainWindow, QTabWidget, QToolBar, QPushButton
+import os
+
+from PySide6.QtWidgets import QMainWindow, QTabWidget, QToolBar, QPushButton, QFileDialog, QMessageBox, QWidget, QVBoxLayout
 from PySide6.QtGui import QFont, QPalette, QColor
 from PySide6.QtWidgets import QApplication
 
 from ui.cadastro_empresa import CadastroEmpresaWidget
 from ui.cadastro_colaborador import CadastroColaboradorWidget
 from ui.cadastro_prestador import CadastroPrestadorWidget
+from ui.cadastro_fornecedor import CadastroFornecedorWidget
 from ui.gerar_recibo import GerarReciboWidget
 from ui.historico import HistoricoWidget
 from ui.relatorios import RelatoriosWidget
 from ui.cadastro_usuario import CadastroUsuarioWidget
+from app_paths import set_data_dir, get_data_dir, get_pdf_dir
+from backup import BackupManager
+from presentation.gavetas_panel import GavetasPanelWidget
+from presentation.auditoria_widget import AuditoriaWidget
 
 
 class MainWindow(QMainWindow):
@@ -24,24 +31,41 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)
         self._build_toolbar()
 
+        # --- Cadastro container with internal sub-tabs ---
+        self.tab_cadastro_container = QWidget()
+        cadastro_layout = QVBoxLayout(self.tab_cadastro_container)
+        cadastro_layout.setContentsMargins(0, 0, 0, 0)
+        self.cadastro_tabs = QTabWidget()
+        cadastro_layout.addWidget(self.cadastro_tabs)
+
         self.tab_empresas = CadastroEmpresaWidget()
         self.tab_colaboradores = CadastroColaboradorWidget()
         self.tab_prestadores = CadastroPrestadorWidget()
+        self.tab_fornecedores = CadastroFornecedorWidget()
+        self.cadastro_tabs.addTab(self.tab_empresas, "Empresas")
+        self.cadastro_tabs.addTab(self.tab_colaboradores, "Colaboradores")
+        self.cadastro_tabs.addTab(self.tab_prestadores, "Prestadores")
+        self.cadastro_tabs.addTab(self.tab_fornecedores, "Fornecedores")
+
         self.tab_gerar = GerarReciboWidget(self.current_user)
         self.tab_historico = HistoricoWidget(self.current_user)
         self.tab_relatorios = RelatoriosWidget(self.current_user)
         self.tab_usuarios = CadastroUsuarioWidget()
+        self.tab_gavetas = GavetasPanelWidget(self.current_user)
+        self.tab_auditoria = AuditoriaWidget(self.current_user)
 
-        self.tabs.addTab(self.tab_empresas, "Empresas")
-        self.tabs.addTab(self.tab_colaboradores, "Colaboradores")
-        self.tabs.addTab(self.tab_prestadores, "Prestadores")
+        # Tabs ordered by natural workflow
+        self.tabs.addTab(self.tab_gavetas, "Gavetas")
         self.tabs.addTab(self.tab_gerar, "Gerar Recibo")
+        self.tabs.addTab(self.tab_cadastro_container, "Cadastro")
         self.tabs.addTab(self.tab_historico, "Histórico")
         self.tabs.addTab(self.tab_relatorios, "Relatórios")
         if self.current_user["is_admin"]:
             self.tabs.addTab(self.tab_usuarios, "Usuários")
+            self.tabs.addTab(self.tab_auditoria, "Auditoria")
 
         self.tabs.currentChanged.connect(self._on_tab_changed)
+        self._build_menu()
 
     def _build_toolbar(self):
         toolbar = QToolBar("Ações")
@@ -50,6 +74,97 @@ class MainWindow(QMainWindow):
         self.theme_btn = QPushButton("Tema: Claro")
         self.theme_btn.clicked.connect(self._toggle_theme)
         toolbar.addWidget(self.theme_btn)
+
+    def _build_menu(self):
+        # --- Cadastro menu with hover sub-options ---
+        cadastro_menu = self.menuBar().addMenu("Cadastro")
+        act_empresas = cadastro_menu.addAction("Empresas")
+        act_colaboradores = cadastro_menu.addAction("Colaboradores")
+        act_prestadores = cadastro_menu.addAction("Prestadores")
+        act_fornecedores = cadastro_menu.addAction("Fornecedores")
+        act_empresas.triggered.connect(lambda: self._go_cadastro(0))
+        act_colaboradores.triggered.connect(lambda: self._go_cadastro(1))
+        act_prestadores.triggered.connect(lambda: self._go_cadastro(2))
+        act_fornecedores.triggered.connect(lambda: self._go_cadastro(3))
+
+        if self.current_user["is_admin"]:
+            admin_menu = self.menuBar().addMenu("Admin")
+
+            act_data_dir = admin_menu.addAction("📁 Trocar pasta dos dados")
+            act_data_dir.triggered.connect(self._change_data_dir)
+
+            admin_menu.addSeparator()
+
+            act_cfg_backup = admin_menu.addAction("⚙️ Configurar Backup")
+            act_cfg_backup.triggered.connect(self._configure_backup)
+
+            act_do_backup = admin_menu.addAction("💾 Fazer Backup Agora")
+            act_do_backup.triggered.connect(self._do_backup_now)
+
+            admin_menu.addSeparator()
+
+            act_open_data = admin_menu.addAction("📂 Abrir Pasta de Dados")
+            act_open_data.triggered.connect(self._open_data_dir)
+
+            act_open_pdf = admin_menu.addAction("📄 Abrir Pasta de PDFs")
+            act_open_pdf.triggered.connect(self._open_pdf_dir)
+
+    def _go_cadastro(self, sub_index):
+        """Switch to the Cadastro tab and select the given sub-tab."""
+        cadastro_idx = self.tabs.indexOf(self.tab_cadastro_container)
+        self.tabs.setCurrentIndex(cadastro_idx)
+        self.cadastro_tabs.setCurrentIndex(sub_index)
+
+    def _change_data_dir(self):
+        folder = QFileDialog.getExistingDirectory(
+            self, "Escolha a pasta para os dados"
+        )
+        if not folder:
+            return
+        set_data_dir(folder)
+        QMessageBox.information(
+            self,
+            "Dados",
+            "Pasta alterada. Reinicie o aplicativo para usar o novo local.",
+        )
+
+    def _configure_backup(self):
+        current = BackupManager.get_backup_path() or "(não configurado)"
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            f"Escolha a pasta de backup (atual: {current})",
+        )
+        if not folder:
+            return
+        BackupManager.set_backup_path(folder)
+        QMessageBox.information(
+            self,
+            "Backup",
+            f"Backup configurado para:\n{folder}\n\n"
+            "O backup automático será feito a cada abertura do sistema."
+            " Máximo de 10 cópias são mantidas.",
+        )
+
+    def _do_backup_now(self):
+        resultado = BackupManager.executar_backup()
+        if resultado["sucesso"]:
+            QMessageBox.information(self, "Backup", resultado["mensagem"])
+        else:
+            QMessageBox.warning(self, "Backup", resultado["mensagem"])
+
+    def _open_data_dir(self):
+        path = get_data_dir()
+        try:
+            os.startfile(path)
+        except Exception:
+            QMessageBox.information(self, "Dados", f"Pasta: {path}")
+
+    def _open_pdf_dir(self):
+        path = get_pdf_dir()
+        try:
+            os.startfile(path)
+        except Exception:
+            QMessageBox.information(self, "PDFs", f"Pasta: {path}")
 
     def _apply_theme(self):
         self.setFont(QFont("Segoe UI", 10))

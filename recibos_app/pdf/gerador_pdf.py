@@ -248,6 +248,153 @@ def gerar_pdf_recibo(
     c.save()
 
 
+def gerar_pdf_multiplos_recibos(caminho_pdf, lista_recibos):
+    """Gera PDF com até 3 recibos na mesma página A4.
+
+    Cada item de lista_recibos é um dict com as chaves:
+        empresa_razao, empresa_cnpj, nome, documento, valor,
+        descricao, data_inicio, data_fim, data_pagamento, template
+    """
+    os.makedirs(os.path.dirname(caminho_pdf), exist_ok=True)
+    c = canvas.Canvas(caminho_pdf, pagesize=A4)
+    largura, altura = A4
+
+    n = len(lista_recibos)
+    if n == 0:
+        c.showPage()
+        c.save()
+        return
+
+    margem_top = 12 * mm
+    margem_bottom = 10 * mm
+    area_util = altura - margem_top - margem_bottom
+    slot_height = area_util / n
+    separator_gap = 4 * mm
+
+    for i, rec in enumerate(lista_recibos):
+        y_top = altura - margem_top - (i * slot_height)
+        y_bottom = y_top - slot_height + separator_gap
+
+        # Draw watermark behind each receipt slot
+        _draw_watermark_in_slot(c, largura, y_top, y_bottom)
+
+        _draw_receipt_slot(
+            c, largura, y_top, y_bottom,
+            rec["empresa_razao"],
+            rec["empresa_cnpj"],
+            rec["nome"],
+            rec["documento"],
+            rec["valor"],
+            rec["descricao"],
+            rec["data_inicio"],
+            rec["data_fim"],
+            rec["data_pagamento"],
+            rec.get("template", "COMPACTO"),
+        )
+
+        # Draw separator line between receipts
+        if i < n - 1:
+            sep_y = y_bottom - 1 * mm
+            c.setStrokeColorRGB(0.6, 0.6, 0.6)
+            c.setDash(3, 3)
+            c.line(15 * mm, sep_y, largura - 15 * mm, sep_y)
+            c.setDash()
+
+    c.showPage()
+    c.save()
+
+
+def _draw_receipt_slot(c, largura, y_top, y_bottom, empresa_razao, empresa_cnpj,
+                       nome, documento, valor, descricao, data_inicio, data_fim,
+                       data_pagamento, template):
+    """Draws a single receipt within a vertical slot [y_top, y_bottom]."""
+    m_left = 20 * mm
+    m_right = largura - 20 * mm
+    y = y_top - 2 * mm
+
+    c.setFont("Helvetica-Bold", 12)
+    c.drawCentredString(largura / 2, y, "RECIBO DE PAGAMENTO")
+
+    y -= 8 * mm
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(m_left, y, empresa_razao.upper())
+    c.drawRightString(m_right, y, f"CNPJ: {empresa_cnpj}")
+
+    y -= 7 * mm
+    c.setFont("Helvetica", 10)
+    c.drawString(m_left, y, "EU:")
+    c.drawString(28 * mm, y, nome)
+    c.line(28 * mm, y - 1 * mm, m_right, y - 1 * mm)
+
+    y -= 6 * mm
+    c.drawString(m_left, y, "CPF:")
+    c.drawString(34 * mm, y, documento)
+    c.line(34 * mm, y - 1 * mm, 90 * mm, y - 1 * mm)
+
+    y -= 7 * mm
+    descricao_upper = descricao.upper()
+    if any(k in descricao_upper for k in [
+        "DO DIA", "NO DIA", "DO PERIODO", "DO PERÍODO", "PERIODO", "PERÍODO"
+    ]):
+        sufixo = ""
+    else:
+        if data_inicio == data_fim:
+            sufixo = f"DO DIA {data_inicio}"
+        else:
+            sufixo = f"DO PERÍODO DE {data_inicio} A {data_fim}"
+
+    texto = (
+        f"DECLARO TER RECEBIDO O VALOR DE R$ {formatar_moeda(valor)} "
+        f"REFERENTE A {descricao_upper} {sufixo}."
+    )
+
+    max_width = largura - 40 * mm
+    text_obj = c.beginText(m_left, y)
+    text_obj.setLeading(11)
+    for linha in _wrap_text_width(texto, max_width, c, "Helvetica", 10):
+        text_obj.textLine(linha)
+    c.drawText(text_obj)
+
+    y = text_obj.getY() - 5 * mm
+    c.setFont("Helvetica", 10)
+    c.drawString(m_left, y, f"DATA DA EFETUAÇÃO DO PAGAMENTO: {data_pagamento}")
+
+    y -= 8 * mm
+    c.drawString(m_left, y, "ASSINATURA:")
+    c.line(50 * mm, y - 1 * mm, m_right, y - 1 * mm)
+
+
+def _draw_watermark_in_slot(c, largura, y_top, y_bottom):
+    """Draw a watermark logo centered within a receipt slot."""
+    logo_path = get_resource_path("assets", "LOGO - MERCADO.png")
+    if not os.path.exists(logo_path):
+        return
+    try:
+        c.saveState()
+        if hasattr(c, "setFillAlpha"):
+            c.setFillAlpha(0.12)
+        slot_h = y_top - y_bottom
+        logo_w = min(80 * mm, largura * 0.5)
+        logo_h = logo_w * 0.5
+        if logo_h > slot_h * 0.7:
+            logo_h = slot_h * 0.7
+            logo_w = logo_h * 2
+        x = (largura - logo_w) / 2
+        # Shift logo towards the upper portion of the slot to match
+        # the single-receipt layout (_draw_watermark uses center + 80mm).
+        # The proportional offset is 80mm / (A4 height ≈ 297mm) ≈ 0.27.
+        center_y = y_bottom + (slot_h - logo_h) / 2
+        offset = slot_h * 0.27
+        y = center_y + offset
+        c.drawImage(logo_path, x, y, width=logo_w, height=logo_h, mask="auto")
+        c.restoreState()
+    except Exception:
+        try:
+            c.restoreState()
+        except Exception:
+            pass
+
+
 def _draw_watermark(c, largura, altura):
     logo_path = get_resource_path("assets", "LOGO - MERCADO.png")
     if not os.path.exists(logo_path):

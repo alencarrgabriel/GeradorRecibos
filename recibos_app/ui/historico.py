@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
 )
 
-from models.recibo import list_recibos, cancel_recibo, delete_recibo
+from data.repositories.sqlite_recibo_repo import list_recibos, cancel_recibo, delete_recibo
 from ui.validators import format_cpf, format_cnpj
 
 
@@ -47,7 +47,7 @@ class HistoricoWidget(QWidget):
         actions_group = QGroupBox("Ações")
         actions_layout = QHBoxLayout(actions_group)
         btns = actions_layout
-        self.btn_refresh = QPushButton("Atualizar")
+        self.btn_refresh = QPushButton("Marcar todos")
         self.btn_reprint = QPushButton("Reimprimir")
         self.btn_cancel = QPushButton("Cancelar Recibo")
         self.btn_delete = QPushButton("Excluir Recibo")
@@ -59,9 +59,10 @@ class HistoricoWidget(QWidget):
 
         table_group = QGroupBox("Histórico de Recibos")
         table_layout = QVBoxLayout(table_group)
-        self.table = QTableWidget(0, 6)
+        self.table = QTableWidget(0, 7)
         self.table.setHorizontalHeaderLabels(
             [
+                "",
                 "Data/Hora",
                 "Empresa",
                 "Tipo",
@@ -75,7 +76,7 @@ class HistoricoWidget(QWidget):
         table_layout.addWidget(self.table)
         layout.addWidget(table_group)
 
-        self.btn_refresh.clicked.connect(self._load_data)
+        self.btn_refresh.clicked.connect(self._select_all)
         self.btn_reprint.clicked.connect(self._handle_reprint)
         self.btn_cancel.clicked.connect(self._handle_cancel)
         self.btn_delete.clicked.connect(self._handle_delete)
@@ -86,25 +87,40 @@ class HistoricoWidget(QWidget):
         for row in list_recibos(usuario_id=usuario_id):
             row_idx = self.table.rowCount()
             self.table.insertRow(row_idx)
-            self.table.setItem(row_idx, 0, QTableWidgetItem(row["created_at"] or ""))
+            chk = QTableWidgetItem("")
+            chk.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            chk.setCheckState(Qt.Unchecked)
+            self.table.setItem(row_idx, 0, chk)
+            self.table.setItem(row_idx, 1, QTableWidgetItem(row["created_at"] or ""))
             self.table.setItem(
-                row_idx, 1, QTableWidgetItem(row["razao_social"] or "")
+                row_idx, 2, QTableWidgetItem(row["razao_social"] or "")
             )
-            self.table.setItem(row_idx, 2, QTableWidgetItem(row["tipo"] or ""))
-            self.table.setItem(row_idx, 3, QTableWidgetItem(row["pessoa_nome"] or ""))
+            self.table.setItem(row_idx, 3, QTableWidgetItem(row["tipo"] or ""))
+            self.table.setItem(row_idx, 4, QTableWidgetItem(row["pessoa_nome"] or ""))
             self.table.setItem(
-                row_idx, 4, QTableWidgetItem(formatar_moeda(row["valor"]))
+                row_idx, 5, QTableWidgetItem(formatar_moeda(row["valor"]))
             )
-            self.table.setItem(row_idx, 5, QTableWidgetItem(row["status"] or ""))
+            self.table.setItem(row_idx, 6, QTableWidgetItem(row["status"] or ""))
             self.table.item(row_idx, 0).setData(Qt.UserRole, row["id"])
             self.table.item(row_idx, 0).setData(Qt.UserRole + 1, row["caminho_pdf"])
 
     def _selected_row(self):
+        checked = self._checked_rows()
+        if checked:
+            return checked[0]
         items = self.table.selectedItems()
         if not items:
             return None
         row = items[0].row()
         return row
+
+    def _checked_rows(self):
+        rows = []
+        for r in range(self.table.rowCount()):
+            item = self.table.item(r, 0)
+            if item and item.checkState() == Qt.Checked:
+                rows.append(r)
+        return rows
 
     def _handle_reprint(self):
         row = self._selected_row()
@@ -118,28 +134,42 @@ class HistoricoWidget(QWidget):
         os.startfile(caminho)
 
     def _handle_cancel(self):
-        row = self._selected_row()
-        if row is None:
-            QMessageBox.information(self, "Seleção", "Selecione um recibo.")
-            return
-        recibo_id = self.table.item(row, 0).data(Qt.UserRole)
-        cancel_recibo(recibo_id)
+        rows = self._checked_rows()
+        if not rows:
+            row = self._selected_row()
+            if row is None:
+                QMessageBox.information(self, "Seleção", "Selecione um recibo.")
+                return
+            rows = [row]
+        for row in rows:
+            recibo_id = self.table.item(row, 0).data(Qt.UserRole)
+            cancel_recibo(recibo_id)
         self._load_data()
 
     def _handle_delete(self):
-        row = self._selected_row()
-        if row is None:
-            QMessageBox.information(self, "Seleção", "Selecione um recibo.")
-            return
+        rows = self._checked_rows()
+        if not rows:
+            row = self._selected_row()
+            if row is None:
+                QMessageBox.information(self, "Seleção", "Selecione um recibo.")
+                return
+            rows = [row]
         if (
             QMessageBox.question(
                 self,
                 "Confirmar exclusão",
-                "Tem certeza que deseja excluir este recibo?",
+                "Tem certeza que deseja excluir o(s) recibo(s) selecionado(s)?",
             )
             != QMessageBox.Yes
         ):
             return
-        recibo_id = self.table.item(row, 0).data(Qt.UserRole)
-        delete_recibo(recibo_id)
+        for row in rows:
+            recibo_id = self.table.item(row, 0).data(Qt.UserRole)
+            delete_recibo(recibo_id)
         self._load_data()
+
+    def _select_all(self):
+        for r in range(self.table.rowCount()):
+            item = self.table.item(r, 0)
+            if item:
+                item.setCheckState(Qt.Checked)

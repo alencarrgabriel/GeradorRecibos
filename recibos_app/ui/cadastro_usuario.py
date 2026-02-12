@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
 )
 
-from models.usuario import list_usuarios, create_usuario
+from data.repositories.sqlite_usuario_repo import list_usuarios, create_usuario
 
 
 class CadastroUsuarioWidget(QWidget):

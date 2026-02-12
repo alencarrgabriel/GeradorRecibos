@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
 )
 
-from models.colaborador import (
+from data.repositories.sqlite_colaborador_repo import (
     list_colaboradores,
     create_colaborador,
     update_colaborador,

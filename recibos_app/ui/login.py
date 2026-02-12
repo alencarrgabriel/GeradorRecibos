@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QFrame,
 )
 
-from models.usuario import authenticate
+from data.repositories.sqlite_usuario_repo import authenticate
 from app_paths import get_resource_path
 
 

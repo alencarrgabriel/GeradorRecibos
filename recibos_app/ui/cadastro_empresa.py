@@ -5,7 +5,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QTextEdit,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -15,7 +14,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
 )
 
-from models.empresa import (
+from data.repositories.sqlite_empresa_repo import (
     list_empresas,
     create_empresa,
     update_empresa,
@@ -45,14 +44,11 @@ class CadastroEmpresaWidget(QWidget):
         self.nome_fantasia_input = QLineEdit()
         self.cnpj_input = QLineEdit()
         self.cnpj_input.setInputMask("00.000.000/0000-00;_")
-        self.texto_padrao_input = QTextEdit()
-        self.texto_padrao_input.setFixedHeight(80)
 
         left.addRow(QLabel("Razão Social *"), self.razao_input)
         left.addRow(QLabel("Nome Fantasia"), self.nome_fantasia_input)
         left.addRow(QLabel("CNPJ *"), self.cnpj_input)
 
-        right.addRow(QLabel("Texto Padrão do Recibo"), self.texto_padrao_input)
 
         form_layout.addLayout(left, 2)
         form_layout.addLayout(right, 3)
@@ -110,7 +106,6 @@ class CadastroEmpresaWidget(QWidget):
         self.nome_fantasia_input.setText(self.table.item(row, 1).text())
         self.cnpj_input.setText(self.table.item(row, 2).text())
         texto_padrao = self.table.item(row, 0).data(Qt.UserRole + 1) or ""
-        self.texto_padrao_input.setText(texto_padrao)
 
     def _handle_add(self):
         razao = self.razao_input.text().strip()
@@ -125,7 +120,7 @@ class CadastroEmpresaWidget(QWidget):
             razao,
             self.nome_fantasia_input.text().strip(),
             only_digits(cnpj),
-            self.texto_padrao_input.toPlainText().strip(),
+            "",
         )
         self._clear_form()
         self._load_data()
@@ -147,7 +142,7 @@ class CadastroEmpresaWidget(QWidget):
             razao,
             self.nome_fantasia_input.text().strip(),
             only_digits(cnpj),
-            self.texto_padrao_input.toPlainText().strip(),
+            "",
         )
         self._clear_form()
         self._load_data()
@@ -174,5 +169,4 @@ class CadastroEmpresaWidget(QWidget):
         self.razao_input.clear()
         self.nome_fantasia_input.clear()
         self.cnpj_input.clear()
-        self.texto_padrao_input.clear()
         self.table.clearSelection()
